@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dialogs>
+    <dialog concept="REBO" scenario="scenario-rebo">
+        <intro>Hey [USERNAME]! | Hallo [USERNAME] | Grüß dich [USERNAME] | Hi [USERNAME]</intro>
+        <accept annotation="GREETING"></accept>
+    </dialog>
+</dialogs>

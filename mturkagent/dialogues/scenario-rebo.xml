@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE scenario SYSTEM "TuTalkScenario.dtd">
+<scenario default-language="en" scenario-name="rebo-example">
+	<configuration>
+		
+		<!-- It *is* possible to hook up a LightSide classifier to TuTalk, 
+		such that the predicted labels are treated as concepts. 
+		but not today. -->
+			
+		<!-- 	
+		<module kind="model" name="animals"
+			classname="edu.cmu.cs.lti.tutalk.module.SidePredictor">
+			<param key="path" value="models/animals.ser" />
+		</module> 
+		-->
+
+	</configuration>
+
+	<!-- I'm not entirely sure what these are used for. -->
+	<transitions>
+		<transition ack-type="agree" floor-status="neutral">
+			<tphrase> yes </tphrase>
+			<tphrase> okay </tphrase>
+		</transition>
+	
+		<transition ack-type="none">
+			<tphrase> moving on... </tphrase>
+		</transition>
+	</transitions>
+	
+	<!-- 'Concepts' define things that students might say,
+	     AND things that the tutor might say back. 
+	     Tutor concepts should take the form of phrase lists.
+		 Student concepts can be phrase lists, 
+		 regular expressions, or lists of annotations,
+	     but only one of these at a time. -->
+		
+	<concepts>
+		<concept label="judgement">
+			<phrase>Wie ist es dir bei dieser Aufgabe gegangen? Alles gut gelaufen?</phrase>
+			<phrase>Und? Wie war's?</phrase>
+			<phrase>Was gefällt dir an deinem Ergebnis und was nicht?</phrase>
+			<phrase>Wie gut erfüllt dein Ergebnis die gestellte Aufgabe?</phrase>
+			<phrase>Wie bist du mit deinem Ergebnis zufrieden?</phrase>
+			<phrase>Bist du mit dem Ergebnis der Aufgabe zufrieden? Warum/Warum nicht?</phrase>
+			<phrase>Wie ist das Lernen zur heutigen Übung gelaufen, hast du schon alles gut verstanden?</phrase>
+			<phrase>Welches Wissen konntest du heute gut anwenden?</phrase>
+		</concept>
+		
+		<concept label="emotions">
+			<phrase>Hat dir diese Aufgabe Spaß gemacht? Warum / Warum nicht?</phrase>
+			<phrase>Wie hast du dich während der Durchführung der Aufgaben gefühlt?</phrase>
+			<phrase>Was hat dir an der Aufgabe Freude bereitet?</phrase>
+			<phrase>Was hat dir nicht so viel Spaß bei der Aufgage gemacht? Warum?</phrase>
+			<phrase>Was hat dir besonders viel Spaß bei der Aufgabe gemacht? Warum?</phrase>
+			<phrase>Worauf bist du bei der Lösung der Aufgabe besonders stolz?</phrase>
+			<phrase>Was hat dir an der Aufgabe besonders gefallen?</phrase>
+			<phrase>Was hat dich an der Aufgabe interessiert?</phrase>
+			<phrase>Hat dich die Arbeit an der Aufgabe gefesselt?</phrase>
+		</concept>
+		
+		<concept label="learning">
+			<phrase>Welchen Tipp könntest du einem jüngeren Lehrling geben, der einen solchen Auftrag zum ersten Mal ausführt?</phrase>
+			<phrase>Wie gut hast du die Aufgabe verstanden?</phrase>
+			<phrase>Inwieweit konntest du dein theoretisches Wissen hier anwenden?</phrase>
+			<phrase>Was hast du für dich aus der Aufgabe gelernt?</phrase>
+			<phrase>Was war heute neu für dich?</phrase>
+			<phrase>Was konntest du von dieser Aufgabe mitnehmen?</phrase>
+			<phrase>Was war interessant an der Aufgabe?</phrase>
+			<phrase>Was war für dich die größte Herausforderung bei der Aufgabe?</phrase>
+			<phrase>Was ist an deiner Lösung der Aufgabe besonders toll?</phrase>
+			<phrase>Was hat dich bei der Aufgabe besonders gefordert?</phrase>
+		</concept>
+		
+		<concept label="positiveExp">
+			<phrase>Toll zu hören! | Was macht diese Aufgabe für dich intressant?</phrase>
+			<phrase>Was hat dir dabei am besten gefallen?</phrase>
+		</concept>
+
+		<concept label="negativeExp">
+			<phrase>Oje! | Was war denn das Problem?</phrase>
+			<phrase>Was war denn das Problem?</phrase>
+			<phrase>Wobei hattest du die meisten Schwierigkeiten?</phrase>
+		</concept>
+		
+		<concept label="negativExpAskFurther">
+			<phrase>Hat es trotzdem Spaß gemacht?</phrase>
+		</concept>
+		
+		<concept label="neutralExp">
+			<phrase>Was gefällt dir an deinem Ergebnis und was nicht?</phrase>
+			<phrase>Wie gut erfüllt dein Ergebnis die gestellte Aufgabe?</phrase>
+		</concept>
+		
+		<concept label="SecondNeutralExp">
+			<phrase>Was hat dich an der Aufgabe interessiert?</phrase>
+		</concept>
+		
+		<concept label="planning">
+			<phrase>Worauf wirst du beim nächsten Mal besonders achten, wenn du einen ähnlichen Auftrag bekommst?</phrase>
+			<phrase>Wo kannst du das Erlernte noch einsetzen?</phrase>
+			<phrase>Wofür kannst du das Erlernte sonst noch anwenden?</phrase>
+			<phrase>Wo könntest du Teile der Aufgabe in Zukunft wieder verwenden?</phrase>
+			<phrase>Was würdest du beim nächsten Mal nicht mehr machen?</phrase>
+			<phrase>Was wirst du das nächste Mal besser machen?</phrase>
+			<phrase>Welche Fähigkeiten, die du hier geübt hast, wirst du in der Zukunft wieder brauchen?</phrase>
+			<phrase>Was wirst du das nächste Mal anders machen? Warum?</phrase>
+			<phrase>Was würdest du beim nächsten Mal wieder gleich machen? Warum?</phrase>
+			<phrase>Was wirst du beim nächsten Mal anders machen und was wirst du gleich machen, wenn du eine ähnliche Aufgabe zu erledigen hast?</phrase>
+			<phrase>Welches Wissen, das du hier angewendet hast, wirst du in Zukunft wieder verwenden?</phrase>
+		</concept>
+		
+		<concept label="planningRecognized">
+			<phrase>Das klingt nach einem Plan!</phrase>
+			<phrase>Klingt gut!</phrase>
+		</concept>
+		
+		<concept label="noPlanningRecognized">
+			<phrase>War nicht vielleicht doch etwas Interessantes für dich dabei?</phrase>
+		</concept>
+		
+		<concept label="planningNoCategory">
+			<phrase>Wenn du die gleiche Aufgabe morgen nochmals machen würdest, was wäre dann anders als heute?</phrase>
+		</concept>
+
+		<concept label="closing">
+			<phrase>Danke, dass du das mit mir besprochen hast!</phrase>
+			<phrase>Schön, dass wir uns unterhalten haben.</phrase>
+			<phrase>Vielen Dank für deine Antworten!</phrase>
+			<phrase>Hast du noch Fragen oder Anregungen an mich?</phrase>
+			<phrase>Danke für dein Feedback.</phrase>
+			<phrase>Schön, dass du mit mir über deine Arbeit reflektiert hast.</phrase>
+			<phrase>Das war es schon wieder, besten Dank für deine Antworten!</phrase>
+			<phrase>Super, danke fürs Mitmachen.</phrase>
+			<phrase>Danke! Das war's für heute :D</phrase>
+			<phrase>Danke, dass du mit mir über deine Arbeit reflektiert hast.</phrase>
+			<phrase>Spitze, danke für deine Teilnahme!</phrase>
+			<phrase>Danke das war's für heute, viel Spaß bei deiner nächsten Aufgabe!</phrase>
+		</concept>
+
+		<concept label="goodbye">
+			<phrase>Bis zum nächsten Mal :)</phrase>
+			<phrase>Schönen Tag noch und bis bald!</phrase>
+			<phrase>Und Tschüß :-) </phrase>
+			<phrase>Bis die Tage!</phrase>
+			<phrase>Danke und bis zum nächsten Mal ;)</phrase>
+			<phrase>Schönen Tag noch :)</phrase>
+			<phrase>Bis bald!</phrase>
+			<phrase>Bis zum nächsten Mal!</phrase>
+		</concept>
+		<!-- these match against external (MessageAnnotator) annotations. -->
+		<concept label="pos_annotation" type="annotation">
+			<phrase>POSITIVE</phrase>
+		</concept>
+		
+		<concept label="neg_annotation" type="annotation">
+			<phrase>NEGATIVE</phrase>
+		</concept>
+		
+		<concept label="planning_annotation" type="annotation">
+			<phrase>PLANNING</phrase>
+		</concept>
+		
+		<concept label="unanticipated-response">
+			<phrase>anything else</phrase>
+		</concept>
+	</concepts>
+
+	
+	<!-- This is the meat of the hierarchical dialogue - 
+		 one main goal with multiple steps, and subgoals that it may reference. -->
+	<script>
+		<goal name="start" difficulty="1">
+			<step>
+				<initiation>judgement</initiation>
+				<response push="goalPos">pos_annotation</response>
+				<response push="goalNeg">neg_annotation</response>
+				<response push="goalNeutral">unanticipated-response</response>
+			</step>
+			
+			<step>
+				<initiation>emotions</initiation>
+				<response>unanticipated-response</response>
+			</step>
+			
+			<step>
+				<initiation>learning</initiation>
+				<response>unanticipated-response</response>
+			</step>
+
+			<step>
+				<initiation>planning</initiation>
+				<response push="goalPlanning">planning_annotation</response>
+				<response push="goalPlanningNegativeResponse">neg_annotation</response>
+				<response push="planningNotCategorized">unanticipated-response</response>
+			</step>
+			
+			<step>
+				<initiation>closing</initiation>
+				<response>unanticipated-response</response>
+			</step>
+			
+			<step>
+				<initiation>goodbye</initiation>
+			</step>
+		</goal>
+
+		<goal name="goalPos" difficulty="1">
+			<step>
+				<initiation>positiveExp</initiation>
+				<response>unanticipated-response</response>
+			</step>
+		</goal>
+
+		<goal name="goalNeg" difficulty="1">
+			<step>
+				<initiation>negativeExp</initiation>
+				<response push="goalNegAskFurther">unanticipated-response</response>
+			</step>
+		</goal>
+		
+		<goal name="goalNegAskFurther">
+			<step>
+				<initiation>negativExpAskFurther</initiation>
+				<response>unanticipated-response</response>
+			</step>
+		</goal>
+		
+		<goal name="goalNeutral" difficulty="1">
+			<step>
+				<initiation>neutralExp</initiation>
+				<response push="goalPos">pos_annotation</response>
+				<response push="goalNeg">neg_annotation</response>
+				<response push="goalNeutralSecond">unanticipated-response</response>
+			</step>
+		</goal>
+
+		<goal name="goalNeutralSecond" difficulty="1">
+			<step>
+				<initiation>SecondNeutralExp</initiation>
+				<response>unanticipated-response</response>
+			</step>
+		</goal>
+		
+		<goal name="goalPlanning" difficulty="1">
+			<step>
+				<initiation>planningRecognized</initiation>
+			</step>
+		</goal>
+		
+		<goal name="goalPlanningNegativeResponse" difficulty="1">
+			<step>
+				<initiation>noPlanningRecognized</initiation>
+				<response push="planningNotCategorized">unanticipated-response</response>
+			</step>
+		</goal>
+		
+		<goal name="planningNotCategorized" difficulty="1">
+			<step>
+				<initiation>planningNoCategory</initiation>
+				<response>unanticipated-response</response>
+			</step>
+		</goal>
+	</script>
+
+</scenario>
