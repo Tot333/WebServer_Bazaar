@@ -39,6 +39,7 @@ function handleDisconnect() {
 handleDisconnect();
 
 var numUsers = {};
+var chatroom_locked = false;
 
 var csv = require('csv');
 const exec = require('child_process').exec;
@@ -246,8 +247,39 @@ function loadHistory(socket, secret)
     }
 }
 
+function logEssay(socket, content, type)
+{    
+    if(socket.temporary) 
+    	return;
+
+    connection.query('update nodechat.room set modified=now() where room.name='+connection.escape(socket.room)+';', function(err, rows, fields)
+    {
+        if (err) 
+            console.log(err);
+    });
+    
+    endpoint = "unknown"
+
+    if(socket.handshake)
+        endpoint = socket.handshake.address;
+        
+    query = 'insert into nodechat.message (roomid, username, useraddress, userid, content, type, timestamp)' 
+                    +'values ((select id from nodechat.room where name='+connection.escape(socket.room)+'), '
+                    +''+connection.escape(socket.username)+', '+connection.escape(endpoint.address+':'+endpoint.port)+', '
+                    +connection.escape(socket.Id) +', '+connection.escape(content)+', '+connection.escape(type)+', now());';
+    
+    connection.query(query, function(err, rows, fields) 
+    {
+        if (err) 
+        	console.log(err);
+    });
+}
+
 function logMessage(socket, content, type)
 {    
+    //if(chatroom_locked)
+    //    return;
+
     if(socket.temporary) 
     	return;
 
@@ -275,6 +307,35 @@ function logMessage(socket, content, type)
     
 }
 
+// if it is a chatbotroom Check on join if chatbot already done
+// if so then lock the chatroom textarea
+function checkChatbotFinished(room, callback) {
+	query = 'SELECT * FROM nodechat.message as m JOIN nodechat.room as r on m.roomid=r.id WHERE r.name='+connection.escape(room)
+                + ' AND m.content=\'leave\' AND m.type=\'presence\' AND m.username=\'Rebo\';';
+                
+    connection.query(query, function(err, results) 
+    {
+        if (err) 
+            console.log(err);
+
+        return callback(results)
+    });
+}
+
+function checkEssayAlreadyWritten(room, callback) {
+    query = 'SELECT * FROM nodechat.message as m JOIN nodechat.room as r on m.roomid=r.id WHERE r.name='+connection.escape(room)
+    + ' AND m.type=' + connection.escape('text') + ';';
+    
+    connection.query(query, function(err, results) 
+    {
+        if (err) 
+            console.log(err);
+
+        return callback(results)
+    });
+}
+
+
 function checkFirstJoin(room, callback) {
     count = 0;
 
@@ -292,7 +353,8 @@ function checkFirstJoin(room, callback) {
 }
 
 io.sockets.on('connection', function (socket) {
-	socket.on('snoop', function(room, username, temporary, id, perspective){
+	socket.on('snoop', function(room, username, temporary, type, perspective){
+        var id = 1;
         if(isBlank(username)) {
 	        origin = socket.handshake.address
 	        username = "Guest "+(origin.address+origin.port).substring(6).replace(/\./g, '');
@@ -329,7 +391,8 @@ io.sockets.on('connection', function (socket) {
 	});
   
 	// when the client emits 'adduser', this listens and executes
-	socket.on('adduser', function(room, username, temporary, id, perspective){
+	socket.on('adduser', function(room, username, temporary, type, perspective){
+        var id = 1;
 
         if(username != "Rebo")
 	    {
@@ -341,26 +404,43 @@ io.sockets.on('connection', function (socket) {
 			{
 				numUsers[room] = 1;
 			}	
+            
+            if(type === "chatbot") {
+                var count = 0;
+                checkFirstJoin(room, function(result){
+                    count = result.length;
 
+                    if (count < 2) {
+                        var script = 'sh ../mturkagent/launch_agent.sh ';
+                        var command = script.concat(room);
+                        exec(command, (error, stdout, stderr) => {
+                            if (error) {
+                            console.error(`exec error: ${error}`);
+                            return;
+                            }
+                            console.log(`stdout: ${stdout}`);
+                            console.log(`stderr: ${stderr}`);
+                        });	
+                    }
+                });
 
-            var count = 0;
-            checkFirstJoin(room, function(result){
-                count = result.length;
+                checkChatbotFinished(room, function(results){
+                    if(results.length > 0) {
+                        io.sockets.in(socket.room).emit('lockTextArea', results);
+                        chatroom_locked = true;
+                    }
+                });
+            } else if(type === "essay") {
+                checkEssayAlreadyWritten(room, function(results){
+                    if(results.length == null || results.length == 0) {
+                        io.sockets.in(socket.room).emit('essayTypeMode', room);
+                    } else if(results.length > 0) {
+                        io.sockets.in(socket.room).emit('essayFinished', room);
+                        chatroom_locked = true;
+                    } 
+                });
+            }
 
-                if (count < 2) {
-                    var script = 'sh ../mturkagent/launch_agent.sh ';
-                    var command = script.concat(room);
-                    exec(command, (error, stdout, stderr) => {
-                        if (error) {
-                        console.error(`exec error: ${error}`);
-                        return;
-                        }
-                        console.log(`stdout: ${stdout}`);
-                        console.log(`stderr: ${stderr}`);
-                    });	
-                }
-
-            });
 	    }
 
         if(isBlank(username)) {
@@ -402,6 +482,12 @@ io.sockets.on('connection', function (socket) {
 	socket.on('sendchat', function (data) 
 	{
 		logMessage(socket, data, "text");
+		io.sockets.in(socket.room).emit('updatechat', socket.username, data);
+    });
+    
+    socket.on('essaySend', function (data) 
+	{
+		logEssay(socket, data, "text");
 		io.sockets.in(socket.room).emit('updatechat', socket.username, data);
 	});
 

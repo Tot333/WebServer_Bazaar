@@ -77,7 +77,7 @@
             }
 
             $('#conversation').append(
-                '<div class="message_line' + (username == 'Rebo' ? ' rebo' : '') + '">'
+                '<div class="message_line' + (username != user ? ' rebo' : '') + '">'
                 + '<div class="info" ' + (color ? 'style="background-color:' + color + '"' : '') + '>'
                 + '<div class="user">' + username + '</div>'
                 + '<div class="date">' + (timestamp.toLocaleTimeString()) + '</div>'
@@ -117,7 +117,9 @@
         var users = {};
         var user = 'Anonymous';
         var room = 'Here';
-        var id = 'NA';
+        var type = 'chatbot';
+        var temp = 1;
+        var perspective = 1;
 
         // on connection to server, ask for user's name with an anonymous callback
         socket.on('connect', function () {
@@ -125,23 +127,29 @@
             groups = /\/(chat|observe|code)(\/tmp)?(?:\/([^\/]+)?)(?:\/([^\/]*))(?:\/([^\/]*))(?:\/([^\/]*))?/.exec(location.pathname);
 
             live_chat = groups[1] == "chat";
-            temp = groups[2] && groups[2].length > 0;
-            room = groups[3];
+            temp = groups[2] || temp;
+            room = groups[3] || room;
+            type = groups[4] || type;
             user = groups[5] || user;
-            id = groups[4];
-            perspective = groups[6];
+            perspective = groups[6] || perspective;
+
             if (live_chat) {
-                if (!user)
+                if (user === "Anonymous")
                     user = prompt("Hi! please enter your name (first name and last initial) to continue.", "");
-                //prompt(room + " " + user + " " + temp + " " + id);
-                socket.emit('adduser', room, user, false, id, perspective);
+                
+                socket.emit('adduser', room, user, false, type, perspective);
             }
             else {
-                socket.emit('snoop', room, id);
+                socket.emit('snoop', room, type);
                 $('input,textarea').prop('disabled', true);
             }
             $('#roomname').text(room);
             //document.getElementById('myIframe').src = "https://docs.google.com/document/d/1uONLY0NEAMBN5d-4NKNkqVrxU_LfQQORFEO5E9rkg0M/edit?usp=sharing";
+
+            if(type === "essay") {
+                console.log("Hide chat for essay");
+                hideChatForEssay();
+            }
         });
 
 
@@ -211,6 +219,37 @@
             $('#conversation_container').stop().animate({ scrollTop: $("#conversation_container")[0].scrollHeight }, 500);
         });
 
+        socket.on('lockTextArea', function(data){
+            console.log("Got lockTextArea");
+            console.log(data);
+            $('input,textarea').prop('disabled', true);
+        });
+
+        socket.on('essayTypeMode', function(data){
+            console.log("Got essayTypeMode");
+            hideChatForEssay();
+        });
+
+        socket.on('essayFinished', function(data){
+            console.log("Essay Finished => locked chat");
+            essayFinished();
+        });
+
+        function hideChatForEssay() {
+            document.getElementById("conversation_container").style.visibility = "hidden";
+            document.getElementById("controls").style.top = "50px";
+            document.getElementById("controls").style.height = "600px";
+            document.getElementById("data").style.height = "500px";
+        }
+
+        function essayFinished() {
+            document.getElementById("conversation_container").style.visibility = "visible";
+            document.getElementById("controls").style.top = "auto";
+            document.getElementById("controls").style.height = "120px";
+            document.getElementById("data").style.height = "60px";
+
+            $('input,textarea').prop('disabled', true);
+        }
 
         function switchRoom(room) {
             socket.emit('switchRoom', room);
@@ -218,22 +257,31 @@
 
         function sendReady(is_ready) {
             socket.emit('ready', is_ready ? 'ready' : 'unready'); //'ready' or 'unready'
-
         }
 
         function sendMessage() {
-            var message = $('#data').val();
-            //$('#data').val('');
-            // tell server to execute 'sendchat' and send along one parameter
+            var confirm = true;
+            if(type === "essay") {
+                confirm = window.confirm("Sind Sie wirklich fertig mit dem ganzen Essay?");
+            }
 
-            $('#data').val('');
+            if(confirm == true) {
+                console.log("Confirm end of essay");
+                var message = $('#data').val();
 
-            message = escapeHTML(message)
+                $('#data').val('');
 
-            if (message && message.length > 0) {
-                socket.emit('sendchat', message);
+                message = escapeHTML(message)
+
+                if(type === "essay") {
+                    essayFinished();
+                    socket.emit('essaySend', message);
+                } else if (message && message.length > 0) {
+                    socket.emit('sendchat', message);
+                }
                 $('#conversation_container').stop().animate({ scrollTop: $("#conversation_container")[0].scrollHeight }, 500);
             }
+
         }
 
         function shareImage() {
